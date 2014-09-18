@@ -34,10 +34,11 @@ public class Server {
     
     public static void serverStart(){
                     
-                   ObjectOutputStream sOutput;
-                   ObjectInputStream sInput;
+                   
                     
         try {
+            
+            
             ServerSocket servsocket = new ServerSocket(port);
             
             while(started){
@@ -47,11 +48,36 @@ public class Server {
                     System.out.println("Connection Accepted!");
                     
                     // create output first
-				sOutput = new ObjectOutputStream(socket.getOutputStream());
-				sInput  = new ObjectInputStream(socket.getInputStream());
+				PrintWriter sOutput = new PrintWriter(socket.getOutputStream(),true);
+				BufferedReader sInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                                BufferedReader userInput=(new BufferedReader(new InputStreamReader(System.in)));
+                                
+                                InputStream stream = socket.getInputStream();
+                                byte[] buffer = new byte[80];
+                                
+                                
 				// read the username
-                                String input = (String) sInput.readObject();
-                                System.out.println(input);
+                              
+                               //String inputLine;
+                               //System.out.println(input);
+                                
+//                                while (stream.read(buffer)> 0){
+//                                    System.out.println((new BufferedReader(new InputStreamReader(stream))).readLine());
+//                                }
+                     String test;           
+                                
+            while ((test = sInput.readLine()) != null) {
+                System.out.println("Not Null");
+                
+               
+                //System.out.println(input.readLine());
+                System.out.println(test);
+                System.out.println("End Sandwich");
+                
+                
+            }
+//            
+                                
 				
                 }
                 
