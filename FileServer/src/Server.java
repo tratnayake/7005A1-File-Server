@@ -53,21 +53,8 @@ public class Server {
                     System.out.println("Connection Successful!");
                     
                     //Choose what Client wants server to do, Either go into GET or SEND
-                    Server.ReadCommand(socket);
-                    
-                    
-                    
-                    
-                    //System.out.println("Starting GET");
-                    //Server.GET(socket);
-                    
-                    
-                    
-//            
-                                
-				
-                }
-                
+                    Server.ReadCommand(socket);	
+                }    
                 catch (Exception e){
                     System.out.println("Exception is " +e);
                 }
@@ -83,14 +70,14 @@ public class Server {
     
     public static void ReadCommand(Socket socket){
         try {
-                
                 //Make a container (byte array) to hold incoming bits of the COMMAND
                 //Size 80 is arbitrary
                 byte[] Container = new byte[80];
                 //Read the inputstream into the Container
                 socket.getInputStream().read(Container);
-                    //DEBUG: See raw data thats been captured
+                        //DEBUG: See raw data thats been captured
                         //System.out.println(Container.toString());
+               
                 //Encode bits with UTF so we can read it as Humans
                 String Command = new String(Container, "UTF-8");
                 //Remove whitespace (because we don't use all of the 80 bits)
@@ -102,20 +89,41 @@ public class Server {
                 FileCommand = CommandElements[0];
                 String FileName = CommandElements[1];
                 
-                //String FileName = CommandElements[1];
                 
-                //int ClientPort = Integer.parseInt(CommandElements[2]);
                 
-                //System.out.println("client port is "+ socket.getPort());
-                
-                //DebugSystem.out.println(CommandElements[2]);
+                //Debug System.out.println(CommandElements[2]);
                 
                 switch(FileCommand){
                     //If CLIENT is trying to SEND, then get the address and invoke Servers GET
                     case "SEND": {
                         InetAddress addr = socket.getInetAddress();
                         System.out.println("SEND has been invoked from Address "+ addr+socket.getPort());
-                        Server.GET(socket,FileName);
+                        
+                        try {
+                            //Create new Socket to wait for File Transfers
+                            ServerSocket FileSocket = new ServerSocket(8006);
+                            System.out.println("Socket 8006 has been created for a file transfer");
+                            //Send RESPONSE message
+                            socket.getOutputStream().write(("SENDFILE,"+FileSocket.getLocalPort()).getBytes());
+                            System.out.println("Response message sent to the client");
+                            //When Client reconnects to send file
+                            boolean receiveMode = true;
+                            
+                            while(receiveMode){
+                                System.out.println("Awaiting connections");
+                            Socket incomingSocket = FileSocket.accept();
+                                System.out.println("File Transfer Connection established");
+                            
+                            Server.GET(incomingSocket,FileName);
+                            }
+                            
+                            
+                        } catch (IOException ex) {
+                            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        
+                        
+                        
                         
                         //
                     }
@@ -127,40 +135,12 @@ public class Server {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-//    public static void ChooseMode(Socket socket){
-//        
-//        try {
-//            //Get Input from Stream
-//           
-//            
-//           BufferedReader sInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//            
-//            String decision;
-//            
-//            while ((decision= sInput.readLine()) != null) {
-//                System.out.println(decision);
-//               
-//            }             
-//                                
-//        } catch (IOException ex) {
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        
-//        
-//        
-//        
-//        
-//    }
+
     
     public static void GET(Socket incomingSocket, String FileName){
        
-        try {
-            //Send a 1 if ready to receive
-            incomingSocket.getOutputStream().write(("SENDFILE").getBytes());
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        }
         
+        System.out.println("Starting GET");
         //Debug
          //System.out.println("Start writing file");
         //Choose your incoming socket

@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author thilinaratnayake
+ * @author Thilina Ratnayake (A00802338) & Elton Sia 
  */
 public class Client {
     public static void main(String[] args) throws Exception{
@@ -41,16 +41,13 @@ public class Client {
                 //Debug
                 //System.out.println("Local port is:");
                 //System.out.println(ServerSock.getLocalPort());
-           
-            
+                   
             String COMMAND = "SEND,"+file.getName();
             
             System.out.println(COMMAND);
            
-            
             //Send the FileTransfer command to the server
             try {
-                
                 ServerSock.getOutputStream().write(COMMAND.getBytes());
                 ServerSock.getOutputStream().flush();
             }
@@ -65,11 +62,22 @@ public class Client {
             //Encode bits with UTF so we can read it as Humans
             String Response = new String(Container, "UTF-8");
             //Remove whitespace (because we don't use all of the 80 bits)
-            Response.replaceAll("//s+","");
-            //DEBUG Print out the contents of the command
-            System.out.println("Response from server is "+ Response);
+            Response = Response.trim();
+                    //DEBUG Print out the contents of the command
+                    //System.out.println("Response from server is "+ Response);
             
-                
+            //Server sends back MESSAGE,PORT to initiate connection with.
+            String[] responseMessageElements = Response.split(",");
+            
+                    //DEBUG: Check slot 1 which SHOULD contain the port.
+            System.out.println("Reponse Message Elements "+ responseMessageElements[1]);
+            
+            //The port used for file transfer operations as sent from Server
+            int ftport = Integer.parseInt(responseMessageElements[1]);
+            
+            //Create the new Socket for File Transfer
+            Socket fileTransferSock = new Socket(serverAddress, ftport);
+            
             //Create a new buffer array to hold the file
             byte[] bufferByteArray = new byte[(int) file.length()];
             
@@ -84,7 +92,7 @@ public class Client {
                 bInput.read(bufferByteArray, 0,bufferByteArray.length);
                 
                 //Make an output stream to write the file to the socket
-                OutputStream os = ServerSock.getOutputStream();
+                OutputStream os = fileTransferSock.getOutputStream();
                 
                 //Write everything in buffer to outputstream, until the size of the outputstream
                 os.write(bufferByteArray, 0, bufferByteArray.length);
@@ -94,7 +102,7 @@ public class Client {
                 os.flush();
                 
                 //Close the socket
-                ServerSock.close();
+                fileTransferSock.close();
                 
                 //DEBUG
                 System.out.println("File has been written to the output stream and the socket is closed.");
