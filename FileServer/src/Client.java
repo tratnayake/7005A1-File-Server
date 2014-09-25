@@ -1,6 +1,7 @@
 
 import java.net.Socket;
 import java.io.*;
+import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  
@@ -17,41 +18,105 @@ import java.util.logging.Logger;
  */
 public class Client {
     public static void main(String[] args) throws Exception{
-        Socket clientSock = new Socket("127.0.0.1", 8006);
-        File myFile = new File("send.txt");
         
+        //Elton: Handle User Input here so they can either so SEND (FILENAME) or GET(FILENAME). Probably have to use a switch.
+        
+        //Send the file, three args are: file name, server address and port,
+        Client.SEND("send.txt", "127.0.0.1", 7005);
+        //Client.GET("receive.txt","127.0.0.1",7005);
         
            
                      
         
     }
     
-    public void SEND(File file, Socket outgoingSocket)
+    public static void SEND(String sendFileName, String serverAddress,int ServerPort)
     {
-        BufferedInputStream bis = null;
+            
         try {
-            File myFile = file;
-            Socket clientSock = outgoingSocket;
-            byte[] mybytearray = new byte[(int) myFile.length()];
-            bis = new BufferedInputStream(new FileInputStream(myFile));
-            bis.read(mybytearray, 0, mybytearray.length);
-            System.out.println("Works until here");
-            OutputStream os = clientSock.getOutputStream();
-            os.write(mybytearray, 0, mybytearray.length);
-            os.flush();
-            clientSock.close();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            //Find the file you want to send
+            File file = new File(sendFileName);
+            //Create the socket that will deal with the connection
+            Socket ServerSock = new Socket(serverAddress, 7005);
+                //Debug
+                //System.out.println("Local port is:");
+                //System.out.println(ServerSock.getLocalPort());
+           
+            
+            String COMMAND = "SEND,"+file.getName();
+            
+            System.out.println(COMMAND);
+           
+            
+            //Send the FileTransfer command to the server
+            try {
+                
+                ServerSock.getOutputStream().write(COMMAND.getBytes());
+                ServerSock.getOutputStream().flush();
+            }
+            
+            catch (Exception e){
+                
+            }
+            
+            //Get the response from the server
+            byte[] Container = new byte[80];
+            ServerSock.getInputStream().read(Container);
+            //Encode bits with UTF so we can read it as Humans
+            String Response = new String(Container, "UTF-8");
+            //Remove whitespace (because we don't use all of the 80 bits)
+            Response.replaceAll("//s+","");
+            //DEBUG Print out the contents of the command
+            System.out.println("Response from server is "+ Response);
+            
+                
+            //Create a new buffer array to hold the file
+            byte[] bufferByteArray = new byte[(int) file.length()];
+            
+            try {
+                //Create a file input stream to take in the file
+                FileInputStream fInput = new FileInputStream(file);
+                
+                //Create a buffered input stream to read that file input stream
+                BufferedInputStream bInput = new BufferedInputStream(fInput);
+                
+                //Read the file through the buffered input stream until the length of the file
+                bInput.read(bufferByteArray, 0,bufferByteArray.length);
+                
+                //Make an output stream to write the file to the socket
+                OutputStream os = ServerSock.getOutputStream();
+                
+                //Write everything in buffer to outputstream, until the size of the outputstream
+                os.write(bufferByteArray, 0, bufferByteArray.length);
+                
+                
+                //flush the output stream
+                os.flush();
+                
+                //Close the socket
+                ServerSock.close();
+                
+                //DEBUG
+                System.out.println("File has been written to the output stream and the socket is closed.");
+                
+                
+                
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                bis.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
         
+        
+            //Create a new buffer array to hold the file
+            
+            
+            
+    
     }
     
 }

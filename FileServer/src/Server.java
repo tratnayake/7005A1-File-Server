@@ -17,9 +17,10 @@ import java.util.logging.Logger;
  */
 public class Server {
     
-    private static int port= 8006;
+    private static int port= 7005;
     private static boolean started = true;
     File fileToSend = new File("alice.txt");
+    private static String FileCommand = null;
     
     public Server (int port){
         this.port = port;
@@ -28,7 +29,7 @@ public class Server {
     public static void main(String[] args) {
         //Create the new server on port 7005
         System.out.println("Start @ Main");
-        Server server1 = new Server(8006);  
+        Server server1 = new Server(7005);  
         //Start the server
         System.out.println("serverStart");
         server1.serverStart();
@@ -43,21 +44,22 @@ public class Server {
             
             
             ServerSocket servsocket = new ServerSocket(port);
+            System.out.println("Server started on port "+port);
             
             while(started){
                 Socket socket = servsocket.accept();
                 
                 try{
-                    System.out.println("Connection Accepted!");
+                    System.out.println("Connection Successful!");
                     
                     //Choose what Client wants server to do, Either go into GET or SEND
-                    Server.ChooseMode(socket);
+                    Server.ReadCommand(socket);
                     
                     
                     
                     
-                    System.out.println("Starting GET");
-                    Server.GET(socket);
+                    //System.out.println("Starting GET");
+                    //Server.GET(socket);
                     
                     
                     
@@ -79,48 +81,105 @@ public class Server {
     }
     
     
-    
-    public static void ChooseMode(Socket socket){
-        
+    public static void ReadCommand(Socket socket){
         try {
-            //Get Input from Stream
-           
-            
-           BufferedReader sInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            
-            String decision;
-            
-            while ((decision= sInput.readLine()) != null) {
-                System.out.println(decision);
+                
+                //Make a container (byte array) to hold incoming bits of the COMMAND
+                //Size 80 is arbitrary
+                byte[] Container = new byte[80];
+                //Read the inputstream into the Container
+                socket.getInputStream().read(Container);
+                    //DEBUG: See raw data thats been captured
+                        //System.out.println(Container.toString());
+                //Encode bits with UTF so we can read it as Humans
+                String Command = new String(Container, "UTF-8");
+                //Remove whitespace (because we don't use all of the 80 bits)
+                Command.replaceAll("//s+","");
+                    //DEBUG Print out the contents of the command
+                System.out.println("Command received is "+Command);
+                String[] CommandElements =Command.split(",");
+                //Debug:System.out.println(CommandElements[0]);
+                FileCommand = CommandElements[0];
+                String FileName = CommandElements[1];
+                
+                //String FileName = CommandElements[1];
+                
+                //int ClientPort = Integer.parseInt(CommandElements[2]);
+                
+                //System.out.println("client port is "+ socket.getPort());
+                
+                //DebugSystem.out.println(CommandElements[2]);
+                
+                switch(FileCommand){
+                    //If CLIENT is trying to SEND, then get the address and invoke Servers GET
+                    case "SEND": {
+                        InetAddress addr = socket.getInetAddress();
+                        System.out.println("SEND has been invoked from Address "+ addr+socket.getPort());
+                        Server.GET(socket,FileName);
+                        
+                        //
+                    }
+                }
                
-            }             
+                    
                                 
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
-        
-        
     }
+//    public static void ChooseMode(Socket socket){
+//        
+//        try {
+//            //Get Input from Stream
+//           
+//            
+//           BufferedReader sInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//            
+//            String decision;
+//            
+//            while ((decision= sInput.readLine()) != null) {
+//                System.out.println(decision);
+//               
+//            }             
+//                                
+//        } catch (IOException ex) {
+//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        
+//        
+//        
+//        
+//        
+//    }
     
-    public static void GET(Socket incomingSocket){
-        System.out.println("Start Get");
+    public static void GET(Socket incomingSocket, String FileName){
+       
+        try {
+            //Send a 1 if ready to receive
+            incomingSocket.getOutputStream().write(("SENDFILE").getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //Debug
+         //System.out.println("Start writing file");
         //Choose your incoming socket
-       Socket socket = incomingSocket;
+       //Socket socket = incomingSocket;
         //Define buffer size
        byte[] bufferByteArray = new byte[1048];
         
         try {
             // Get the inputstream from socket
-            InputStream is = socket.getInputStream();
+            InputStream is = incomingSocket.getInputStream();
             // Read the number of bytes that need to be read.
             int fileSizeInBits = is.read(bufferByteArray, 0, bufferByteArray.length);
-            System.out.println(fileSizeInBits);
+                
+                //Debug: Print file size
+                //System.out.println(fileSizeInBits);
             
+        
             // Create a new file output stream to handle writing the file onto the server.
-            FileOutputStream foutput = new FileOutputStream("ReceivedFile.txt");
+            FileOutputStream foutput = new FileOutputStream("./savedir/NewFile.txt");
             // Use a buffered output stream that writes to the file output stream
             BufferedOutputStream boutput = new BufferedOutputStream(foutput);
             
@@ -130,9 +189,11 @@ public class Server {
             
            //CLose the buffer
             boutput.close();
+            System.out.println("File saved to /savedir");
            //Close the socket
-            System.out.println("Before close");
-            socket.close();
+            //System.out.println("Before close");
+            incomingSocket.close();
+            
   
             
         } catch (IOException ex) {
