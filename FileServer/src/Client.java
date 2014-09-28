@@ -169,19 +169,22 @@ public class Client {
         InputStream is = newSock.getInputStream();
    
         int fileSize = is.read(container,0,container.length);
-         
-        FileOutputStream fout = new FileOutputStream("./clientsavedir/getfile.txt");
-
-        BufferedOutputStream boutput = new BufferedOutputStream(fout);
-
-        boutput.write(container,0,fileSize);
         
-        boutput.close();
+                System.out.println("FILE SIZE is "+fileSize);
+                
+        String savedir = ".\\clientsavedir\\";
+         
+                System.out.println("FILE OUTPUTSTREAM");
+        FileOutputStream fout = new FileOutputStream(savedir+getFileName.trim());
+
+            try (BufferedOutputStream boutput = new BufferedOutputStream(fout)) {
+                boutput.write(container,0,fileSize);
+            }
         
         System.out.println("File Saved to clientsavedir directory"); 
             }
             catch(Exception e) {
-                
+                System.out.println(e);
             }
             
         }

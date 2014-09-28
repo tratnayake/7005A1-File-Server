@@ -200,7 +200,7 @@ public class Server {
         try{
             System.out.println("Starting Send");
             //finds out which file tosend
-            File file = new File(FileName);
+            File file = new File(FileName.trim());
             //where the file path is
             String abpath = file.getAbsolutePath();
             String fpath = abpath.substring(0,abpath.lastIndexOf(File.separator));
