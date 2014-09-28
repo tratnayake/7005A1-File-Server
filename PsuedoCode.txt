@@ -1,0 +1,90 @@
+Client
+
+
+USER: Types in COMMAND ("SEND or GET")
+
+switch on COMMAND
+
+SEND - do Send
+GET - do Get
+
+SEND (name of the file, address of server, server port) {
+	
+	- make socket and connect to server on port
+
+	- send file transfer command ("SEND,filename")
+
+	- wait for response message from server that contains new port number to initiate a new connection on
+
+	- read response message
+
+	- Grab new port
+
+	- make new socket and connect to server on new port
+
+	- grab a file, break it down into bits and push over sockets output stream
+
+	- close the socket
+}
+
+GET (filename, server address, port) {
+
+- make socket and connect to server on port
+
+	- send file transfer command ("GET,filename")
+
+	- wait for response message from server that contains new port number to initiate a new connection on
+
+	- read response message
+
+	- Grab new port
+
+	- make new socket and connect to server on new port
+
+	- grab bits from input stream, build it up and write file into outputstream 
+
+	- close the socket	
+
+
+}
+
+SERVER 
+
+Make a new socket on 7005 and listen for connections
+
+When you accept connection, the first data to come through will be a COMMAND (either a SEND|GET,FILENAME)
+
+SWITCH on COMMAND 
+
+SEND (Client's SEND) = do GET (go into receive mode)
+
+GET (Client's GET) = do SEND ( go into file send mode)
+
+
+GET:
+
+Create a new socket that will serve the file transfer only ( a second channel )
+
+Send a response to client with the new sockets port.
+
+Listen for connections on the new socket
+
+Accept connection,
+
+Accept all data on inputstream as bits, then build up into file.
+
+Close connection.
+
+
+SEND:
+Create a new socket that will serve the file transfer only ( a second channel )
+
+Send a response to client with the new sockets port.
+
+Listen for connections on the new socket
+
+Accept connection,
+
+Grab a file and break down into bits. Send over outputstream to client.
+
+Close connection.
