@@ -167,9 +167,11 @@ public class Server {
                 //Debug: Print file size
                 //System.out.println(fileSizeInBits);
             
-        
+            
+           
+           String fileDirectory = fileDirectory = ".\\savedir\\";
             // Create a new file output stream to handle writing the file onto the server.
-            FileOutputStream foutput = new FileOutputStream("./savedir/NewFile.txt");
+            FileOutputStream foutput = new FileOutputStream(fileDirectory+FileName.trim());
             // Use a buffered output stream that writes to the file output stream
             BufferedOutputStream boutput = new BufferedOutputStream(foutput);
             
