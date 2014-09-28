@@ -1,7 +1,8 @@
 
 import java.net.Socket;
 import java.io.*;
-import java.net.ServerSocket;
+import static java.time.Clock.system;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  
@@ -17,14 +18,27 @@ import java.util.logging.Logger;
  * @author Thilina Ratnayake (A00802338) & Elton Sia 
  */
 public class Client {
+    static String send = "SEND";
+    static String get = "GET";
+    
     public static void main(String[] args) throws Exception{
         
         //Elton: Handle User Input here so they can either so SEND (FILENAME) or GET(FILENAME). Probably have to use a switch.
+        System.out.println("Note: it has to be all capital letters, and server must be restarted after a command has been sent");
+        System.out.println("Type SEND to send a file otherwise type GET to receive a file");
+        Scanner scan = new Scanner(System.in);
+        String input = scan.nextLine();
+        if (input.equals(send))
+        {
         
         //Send the file, three args are: file name, server address and port,
         Client.SEND("send.txt", "127.0.0.1", 7005);
-        //Client.GET("receive.txt","127.0.0.1",7005);
         
+        }
+        else if(input.equals(get))
+        {
+            Client.GET("get.txt", "127.0.0.1", 7005);
+        }
            
                      
         
@@ -96,8 +110,7 @@ public class Client {
                 
                 //Write everything in buffer to outputstream, until the size of the outputstream
                 os.write(bufferByteArray, 0, bufferByteArray.length);
-                
-                
+
                 //flush the output stream
                 os.flush();
                 
@@ -106,9 +119,7 @@ public class Client {
                 
                 //DEBUG
                 System.out.println("File has been written to the output stream and the socket is closed.");
-                
-                
-                
+
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
@@ -122,9 +133,62 @@ public class Client {
         
             //Create a new buffer array to hold the file
             
-            
-            
-    
     }
     
+    public static void GET(String getFileName, String address, int port){
+        int newPort;
+        try{
+            
+        Socket socket = new Socket(address, port);
+        
+        File file = new File(getFileName);
+        String command ="GET," + file.getName();
+        
+        System.out.println(command);
+ 
+        socket.getOutputStream().write(command.getBytes());
+        socket.getOutputStream().flush();
+        byte[] bit = new byte[80];
+        socket.getInputStream().read(bit);
+            
+        String change = new String(bit, "UTF-8");
+        
+        //replace white spaces
+        change = change.trim();
+        
+        System.out.println("change " + change);
+        
+        String[] Elements = change.split(",");          
+            
+        newPort = Integer.parseInt(Elements[1]);
+
+        Socket newSock = new Socket(address, newPort);
+        
+        byte[] container = new byte[1048];
+            try{
+        InputStream is = newSock.getInputStream();
+   
+        int fileSize = is.read(container,0,container.length);
+         
+        FileOutputStream fout = new FileOutputStream("./clientsavedir/getfile.txt");
+
+        BufferedOutputStream boutput = new BufferedOutputStream(fout);
+
+        boutput.write(container,0,fileSize);
+        
+        boutput.close();
+        
+        System.out.println("File Saved to clientsavedir directory"); 
+            }
+            catch(Exception e) {
+                
+            }
+            
+        }
+        catch (IOException | NumberFormatException e){
+            
+        }
+
+        
+    }
 }

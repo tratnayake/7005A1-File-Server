@@ -1,8 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /*
@@ -81,15 +78,13 @@ public class Server {
                 //Encode bits with UTF so we can read it as Humans
                 String Command = new String(Container, "UTF-8");
                 //Remove whitespace (because we don't use all of the 80 bits)
-                Command.replaceAll("//s+","");
+                Command = Command.replaceAll("//s+","");
                     //DEBUG Print out the contents of the command
                 System.out.println("Command received is "+Command);
-                String[] CommandElements =Command.split(",");
+                String[] CommandElements = Command.split(",");
                 //Debug:System.out.println(CommandElements[0]);
                 FileCommand = CommandElements[0];
                 String FileName = CommandElements[1];
-                
-                
                 
                 //Debug System.out.println(CommandElements[2]);
                 
@@ -108,29 +103,44 @@ public class Server {
                             System.out.println("Response message sent to the client");
                             //When Client reconnects to send file
                             boolean receiveMode = true;
-                            
                             while(receiveMode){
                                 System.out.println("Awaiting connections");
                             Socket incomingSocket = FileSocket.accept();
                                 System.out.println("File Transfer Connection established");
-                            
                             Server.GET(incomingSocket,FileName);
+                            
                             }
                             
                             
                         } catch (IOException ex) {
                             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                    }
+                    case "GET": {
+                        System.out.println("Get is now invoked");
+                        try{
+                             ServerSocket servSock = new ServerSocket(5005);
+                             System.out.println("Socket 5005 has been created for a file transfer");
+                             socket.getOutputStream().write(("GETFILE," + servSock.getLocalPort()).getBytes());
+                             System.out.println("Response message sent to the client");
                         
-                        
-                        
-                        
-                        //
+                              boolean sendMode = true;
+                              
+                              while(sendMode){
+                                 System.out.println("Awaiting connections");
+                                 Socket outgoingSocket = servSock.accept();
+                                 System.out.println("File transfer connection established");
+                                 Server.SEND(outgoingSocket, FileName);
+                                }
+                              
+                        }
+                        catch(IOException ex)
+                        {
+                            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                 }
-               
-                    
-                                
+         
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -173,7 +183,6 @@ public class Server {
            //Close the socket
             //System.out.println("Before close");
             incomingSocket.close();
-            
   
             
         } catch (IOException ex) {
@@ -183,48 +192,53 @@ public class Server {
         
     }
     
-    public static void SEND(File fileToSend, Socket socket){
-        while (true){
+    public static void SEND(Socket outgoingSocket, String FileName)
+    {
+        
+        try{
+            System.out.println("Starting Send");
+            //finds out which file tosend
+            File file = new File(FileName);
+            //where the file path is
+            String abpath = file.getAbsolutePath();
+            String fpath = abpath.substring(0,abpath.lastIndexOf(File.separator));
+            System.out.println("filepath is " +fpath);
+            //creates buffer array to hold file
+            byte[] bit = new byte[(int) file.length()];
+            System.out.println("File is " + file);
+            System.out.println("File name is " + FileName);
+            //create a file input stream to take in the file
+            FileInputStream  fis = new FileInputStream(file); 
+                System.out.println(fis);
+            //create buffered input stream to read that file input stream
+            BufferedInputStream bis = new BufferedInputStream(fis);
             
-            //Create a new buffer array to hold the file
-            byte[] bufferByteArray = new byte[(int) fileToSend.length()];
+            //read the file through the buffered input stream until the length of the file
+            bis.read(bit, 0, bit.length);
             
-            try {
-                //Create a file input stream to take in the file
-                FileInputStream fInput = new FileInputStream(fileToSend);
-                
-                //Create a buffered input stream to read that file input stream
-                BufferedInputStream bInput = new BufferedInputStream(fInput);
-                
-                //Read the file through the buffered input stream until the length of the file
-                bInput.read(bufferByteArray, 0,bufferByteArray.length);
-                
-                //Make an output stream to write the file to the socket
-                OutputStream os = socket.getOutputStream();
-                
-                //Write everything in buffer to outputstream, until the size of the outputstream
-                os.write(bufferByteArray, 0, bufferByteArray.length);
-                
-                System.out.println("File Written");
-                
+            //make an output stream to write the file  to the socket
+            OutputStream os = outgoingSocket.getOutputStream();
+               
+            //write everything in buffer to outputstream, until the size of the outputstream
+            os.write(bit, 0, bit.length);
+                System.out.println("file has been written");
+                            
                 //flush the output stream
-                os.flush();
-                
-                //Close the socket
-                socket.close();
-                
-                
-                
-            } catch (FileNotFoundException ex) {
+            os.flush();
+            
+            
+            //close the socket
+            outgoingSocket.close();
+            
+            //test
+            System.out.println("File has been written to output stream and socket is closed");
+            }
+            
+            catch (FileNotFoundException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
-        }
-        
-    
-}
-    
+    }
     
 }
