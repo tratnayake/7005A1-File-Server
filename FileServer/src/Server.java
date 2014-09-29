@@ -124,10 +124,13 @@ public class Server {
                     case "GET": {
                         System.out.println("Get is now invoked");
                         try{
+                             File file  = new File(FileName.trim());
+                             FileSize = String.valueOf(file.length()); 
                              ServerSocket servSock = new ServerSocket(5005);
                              System.out.println("Socket 5005 has been created for a file transfer");
-                             socket.getOutputStream().write(("GETFILE," + servSock.getLocalPort()).getBytes());
+                             socket.getOutputStream().write(("GETFILE," + servSock.getLocalPort()+","+ FileSize).getBytes());
                              System.out.println("Response message sent to the client");
+                             
                         
                               boolean sendMode = true;
                               
@@ -135,7 +138,7 @@ public class Server {
                                  System.out.println("Awaiting connections");
                                  Socket outgoingSocket = servSock.accept();
                                  System.out.println("File transfer connection established");
-                                 Server.SEND(outgoingSocket, FileName);
+                                 Server.SEND(outgoingSocket, file, FileSize);
                                 }
                               
                         }
@@ -202,21 +205,17 @@ public class Server {
         
     }
     
-    public static void SEND(Socket outgoingSocket, String FileName)
+    public static void SEND(Socket outgoingSocket, File file, String FileSize)
     {
         
         try{
             System.out.println("Starting Send");
             //finds out which file tosend
-            File file = new File(FileName.trim());
-            //where the file path is
-            String abpath = file.getAbsolutePath();
-            String fpath = abpath.substring(0,abpath.lastIndexOf(File.separator));
-            System.out.println("filepath is " +fpath);
+            //File file = new File(FileName.trim());
+            int fSize = Integer.parseInt(FileSize.trim());
+            System.out.println("Size of File is "+fSize);
             //creates buffer array to hold file
             byte[] bit = new byte[(int) file.length()];
-            System.out.println("File is " + file);
-            System.out.println("File name is " + FileName);
             //create a file input stream to take in the file
             FileInputStream  fis = new FileInputStream(file); 
                 System.out.println(fis);
