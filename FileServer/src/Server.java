@@ -85,6 +85,7 @@ public class Server {
                 //Debug:System.out.println(CommandElements[0]);
                 FileCommand = CommandElements[0];
                 String FileName = CommandElements[1];
+                String FileSize = CommandElements[2];
                 
                 //Debug System.out.println(CommandElements[2]);
                 
@@ -107,7 +108,7 @@ public class Server {
                                 System.out.println("Awaiting connections");
                             Socket incomingSocket = FileSocket.accept();
                                 System.out.println("File Transfer Connection established");
-                            Server.GET(incomingSocket,FileName);
+                            Server.GET(incomingSocket,FileName,FileSize);
                             
                             }
                             
@@ -147,7 +148,7 @@ public class Server {
     }
 
     
-    public static void GET(Socket incomingSocket, String FileName){
+    public static void GET(Socket incomingSocket, String FileName, String FileSize){
        
         
         System.out.println("Starting GET");
@@ -156,7 +157,10 @@ public class Server {
         //Choose your incoming socket
        //Socket socket = incomingSocket;
         //Define buffer size
-       byte[] bufferByteArray = new byte[1048];
+        int FSize = Integer.parseInt(FileSize.trim());
+        System.out.println("Size of File is "+FSize);
+       byte[] bufferByteArray = new byte[FSize];
+        System.out.println("The size of the barray is "+bufferByteArray.length);
         
         try {
             // Get the inputstream from socket
@@ -168,8 +172,8 @@ public class Server {
                 //System.out.println(fileSizeInBits);
             
             
-           
-           String fileDirectory = fileDirectory = ".\\savedir\\";
+           //Windows: String fileDirectory = fileDirectory = ".\\savedir\\";
+           String fileDirectory = fileDirectory = "./savedir/";
             // Create a new file output stream to handle writing the file onto the server.
             FileOutputStream foutput = new FileOutputStream(fileDirectory+FileName.trim());
             // Use a buffered output stream that writes to the file output stream

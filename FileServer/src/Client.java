@@ -32,7 +32,7 @@ public class Client {
         {
         
         //Send the file, three args are: file name, server address and port,
-        Client.SEND("send.txt", "127.0.0.1", 7005);
+        Client.SEND("LV4_IG.pdf", "127.0.0.1", 7005);
         
         }
         else if(input.equals(get))
@@ -55,10 +55,12 @@ public class Client {
                 //Debug
                 //System.out.println("Local port is:");
                 //System.out.println(ServerSock.getLocalPort());
-                   
-            String COMMAND = "SEND,"+file.getName();
             
-            System.out.println(COMMAND);
+            String fileSize = String.valueOf(file.length());
+                   
+            String COMMAND = "SEND,"+file.getName()+","+fileSize;
+            
+            System.out.println("COMMAND SEND OUT IS "+COMMAND);
            
             //Send the FileTransfer command to the server
             try {
