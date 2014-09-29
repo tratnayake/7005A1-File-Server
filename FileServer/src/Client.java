@@ -28,16 +28,23 @@ public class Client {
         System.out.println("Type SEND to send a file otherwise type GET to receive a file");
         Scanner scan = new Scanner(System.in);
         String input = scan.nextLine();
+        
+        
         if (input.equals(send))
         {
-        
-        //Send the file, three args are: file name, server address and port,
-        Client.SEND("LV4_IG.pdf", "127.0.0.1", 7005);
+            System.out.println("Please type in the file you want to send to the server");
+            System.out.println("Example: send.txt, get.txt, try.txt, test.txt");
+            String chooseSend = scan.nextLine();
+             //Send the file, three args are: file name, server address and port,
+             Client.SEND(chooseSend, "127.0.0.1", 7005);
         
         }
         else if(input.equals(get))
         {
-            Client.GET("get.txt", "127.0.0.1", 7005);
+            System.out.println("Please choose a file to get from the server");
+            System.out.println("Example: get.txt, test.txt, send.txt");
+            String chooseGet = scan.nextLine();
+            Client.GET(chooseGet, "127.0.0.1", 7005);
         }
            
                      
@@ -139,12 +146,14 @@ public class Client {
     
     public static void GET(String getFileName, String address, int port){
         int newPort;
+        int fSize;
         try{
             
         Socket socket = new Socket(address, port);
         
         File file = new File(getFileName);
         String command ="GET," + file.getName();
+        
         
         System.out.println(command);
  
@@ -163,16 +172,20 @@ public class Client {
         String[] Elements = change.split(",");          
             
         newPort = Integer.parseInt(Elements[1]);
+        
+        fSize = Integer.parseInt(Elements[2]);
+            
+            System.out.println("fSize is "+fSize);
 
         Socket newSock = new Socket(address, newPort);
         
-        byte[] container = new byte[1048];
+        byte[] container = new byte[fSize];
             try{
         InputStream is = newSock.getInputStream();
    
         int fileSize = is.read(container,0,container.length);
-        
-                System.out.println("FILE SIZE is "+fileSize);
+            
+                System.out.println("FILE SIZE is "+fileSize + " container size is " + container.length);
                 
         String savedir = ".\\clientsavedir\\";
          
