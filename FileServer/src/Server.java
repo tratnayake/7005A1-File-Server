@@ -18,6 +18,8 @@ public class Server {
     private static boolean started = true;
     File fileToSend = new File("alice.txt");
     private static String FileCommand = null;
+    private static String FileSize;
+    private static String[] CommandElements;
     
     public Server (int port){
         this.port = port;
@@ -81,17 +83,19 @@ public class Server {
                 Command = Command.replaceAll("//s+","");
                     //DEBUG Print out the contents of the command
                 System.out.println("Command received is "+Command);
-                String[] CommandElements = Command.split(",");
+                CommandElements = Command.split(",");
                 //Debug:System.out.println(CommandElements[0]);
                 FileCommand = CommandElements[0];
                 String FileName = CommandElements[1];
-                String FileSize = CommandElements[2];
+                
                 
                 //Debug System.out.println(CommandElements[2]);
                 
                 switch(FileCommand){
+                   
                     //If CLIENT is trying to SEND, then get the address and invoke Servers GET
                     case "SEND": {
+                        FileSize = CommandElements[2];
                         InetAddress addr = socket.getInetAddress();
                         System.out.println("SEND has been invoked from Address "+ addr+socket.getPort());
                         
