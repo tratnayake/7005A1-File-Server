@@ -247,39 +247,47 @@ public class Server {
             int fSize = Integer.parseInt(FileSize.trim());
             System.out.println("Size of File is "+fSize);
             //creates buffer array to hold file
-            byte[] bit = new byte[(int) file.length()];
+            byte[] bufferByteArray = new byte[10];
             //create a file input stream to take in the file
-            FileInputStream  fis = new FileInputStream(file); 
-                System.out.println(fis);
-            //create buffered input stream to read that file input stream
-            BufferedInputStream bis = new BufferedInputStream(fis);
             
-            //read the file through the buffered input stream until the length of the file
-            bis.read(bit, 0, bit.length);
+           
             
-            //make an output stream to write the file  to the socket
-            OutputStream os = outgoingSocket.getOutputStream();
+            try {
+                //Create a file input stream to take in the file
+                FileInputStream fInput = new FileInputStream(file);
+                
+                DataInputStream in = new DataInputStream(fInput);
+                
+                OutputStream sOutput = outgoingSocket.getOutputStream();
+                
+                try {
+                int len =0;
+                    while ((len = in.read(bufferByteArray)) != -1){
+                       sOutput.write(bufferByteArray);
+                       
+                       
+
+                    }
+                    System.out.println("FILE FINISHED being sent over!");
+                }
+                catch(Exception e) {
+                    System.out.println(e);
+                }
+                
+                outgoingSocket.close();
+                System.out.println("Socket Closed");
                
-            //write everything in buffer to outputstream, until the size of the outputstream
-            os.write(bit, 0, bit.length);
-                System.out.println("file has been written");
-                            
-                //flush the output stream
-            os.flush();
-            
-            
-            //close the socket
-            outgoingSocket.close();
-            
-            //test
-            System.out.println("File has been written to output stream and socket is closed");
-            }
-            
-            catch (FileNotFoundException ex) {
+                
+                
+               
+
+            } catch (FileNotFoundException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } 
+            
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
 }
