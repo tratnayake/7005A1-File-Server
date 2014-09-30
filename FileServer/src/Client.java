@@ -23,6 +23,7 @@ public class Client {
     
     public static void main(String[] args) throws Exception{
         
+        while(true){
         //Elton: Handle User Input here so they can either so SEND (FILENAME) or GET(FILENAME). Probably have to use a switch.
         System.out.println("Note: it has to be all capital letters, and server must be restarted after a command has been sent");
         System.out.println("Type SEND to send a file otherwise type GET to receive a file");
@@ -48,7 +49,7 @@ public class Client {
         }
            
                      
-        
+        }     
     }
     
     public static void SEND(String sendFileName, String serverAddress,int ServerPort)
@@ -57,11 +58,8 @@ public class Client {
         try {
             //Find the file you want to send
             File file = new File(sendFileName);
-            //Create the socket that will deal with the connection
+            //Create the socket that will deal with the connection. NOTE this is for FILE TRANSFER COMMANDS only.
             Socket ServerSock = new Socket(serverAddress, 7005);
-                //Debug
-                //System.out.println("Local port is:");
-                //System.out.println(ServerSock.getLocalPort());
             
             String fileSize = String.valueOf(file.length());
                    
@@ -69,7 +67,7 @@ public class Client {
             
             System.out.println("COMMAND SEND OUT IS "+COMMAND);
            
-            //Send the FileTransfer command to the server
+            //1. Send the FileTransfer command to the server
             try {
                 ServerSock.getOutputStream().write(COMMAND.getBytes());
                 ServerSock.getOutputStream().flush();
@@ -79,20 +77,19 @@ public class Client {
                 
             }
             
-            //Get the response from the server
+            //2. RESPONSE: Get the response from the server
             byte[] Container = new byte[80];
             ServerSock.getInputStream().read(Container);
             //Encode bits with UTF so we can read it as Humans
             String Response = new String(Container, "UTF-8");
             //Remove whitespace (because we don't use all of the 80 bits)
             Response = Response.trim();
-                    //DEBUG Print out the contents of the command
-                    //System.out.println("Response from server is "+ Response);
+                 
+            System.out.println("RESPONSE from server:"+ Response);
             
             //Server sends back MESSAGE,PORT to initiate connection with.
             String[] responseMessageElements = Response.split(",");
             
-                    //DEBUG: Check slot 1 which SHOULD contain the port.
             System.out.println("Reponse Message Elements "+ responseMessageElements[1]);
             
             //The port used for file transfer operations as sent from Server
@@ -102,38 +99,40 @@ public class Client {
             Socket fileTransferSock = new Socket(serverAddress, ftport);
             
             //Create a new buffer array to hold the file
-            byte[] bufferByteArray = new byte[(int) file.length()];
+            byte[] bufferByteArray = new byte[10];
             
             try {
                 //Create a file input stream to take in the file
                 FileInputStream fInput = new FileInputStream(file);
                 
-                //Create a buffered input stream to read that file input stream
-                BufferedInputStream bInput = new BufferedInputStream(fInput);
+                DataInputStream in = new DataInputStream(fInput);
                 
-                //Read the file through the buffered input stream until the length of the file
-                bInput.read(bufferByteArray, 0,bufferByteArray.length);
+                OutputStream sOutput = fileTransferSock.getOutputStream();
                 
-                //Make an output stream to write the file to the socket
-                OutputStream os = fileTransferSock.getOutputStream();
-                
-                //Write everything in buffer to outputstream, until the size of the outputstream
-                os.write(bufferByteArray, 0, bufferByteArray.length);
+                try {
+                int len =0;
+                    while ((len = in.read(bufferByteArray)) != -1){
+                       sOutput.write(bufferByteArray);
+                       
+                       
 
-                //flush the output stream
-                os.flush();
+                    }
+                    System.out.println("FILE FINISHED being sent over!");
+                }
+                catch(Exception e) {
+                    System.out.println(e);
+                }
                 
-                //Close the socket
                 fileTransferSock.close();
+                System.out.println("Socket Closed");
+               
                 
-                //DEBUG
-                System.out.println("File has been written to the output stream and the socket is closed.");
+                
+               
 
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } 
             
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -179,23 +178,38 @@ public class Client {
 
         Socket newSock = new Socket(address, newPort);
         
-        byte[] container = new byte[fSize];
+        //make the average buffer 10 bits.
+        byte[] bba = new byte[1];
             try{
         InputStream is = newSock.getInputStream();
    
-        int fileSize = is.read(container,0,container.length);
-            
-                System.out.println("FILE SIZE is "+fileSize + " container size is " + container.length);
-                
-        String savedir = ".\\clientsavedir\\";
-         
-                System.out.println("FILE OUTPUTSTREAM");
-        FileOutputStream fout = new FileOutputStream(savedir+getFileName.trim());
+       try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+               
+                int read;
+                int count = 0;
+                //while there's more in the input stream, write to buffer
+                    while ((is.read(bba)) != -1){
+                        //send buffer to outputstream
+                      baos.write(bba);
+                        count ++;
 
-            try (BufferedOutputStream boutput = new BufferedOutputStream(fout)) {
-                boutput.write(container,0,fileSize);
-            }
-        
+                    }
+                    //write outputstream to byte array
+                    byte[] container = baos.toByteArray();
+                    System.out.println("container is size: "+container.length);
+                    System.out.println("FILE FINISHED being sent over! + count = " +count);
+                    
+                    //Windows: String fileDirectory = fileDirectory = ".\\savedir\\";
+           String fileDirectory = fileDirectory = "./clientsavedir/";
+            // Create a new file output stream to handle writing the file onto the server.
+            FileOutputStream foutput = new FileOutputStream(fileDirectory+getFileName.trim());
+            
+            foutput.write(container);
+                }
+                catch(Exception e) {
+                    System.out.println(e);
+                }
         System.out.println("File Saved to clientsavedir directory"); 
             }
             catch(Exception e) {
